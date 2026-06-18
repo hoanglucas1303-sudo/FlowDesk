@@ -49,9 +49,9 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/', label: UI.dashboard, icon: LayoutDashboard },
-  { href: '#projects', label: UI.projects, icon: FolderOpen },
-  { href: '#documents', label: UI.documents, icon: FileText },
-  { href: '#tasks', label: UI.tasks, icon: CheckSquare },
+  { href: '/projects', label: UI.projects, icon: FolderOpen },
+  { href: '/documents', label: UI.documents, icon: FileText },
+  { href: '/tasks', label: UI.tasks, icon: CheckSquare },
   { href: '/vault', label: UI.vault, icon: Lock },
 ];
 
