@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── User ───────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String    @map("password_hash")
+  avatarUrl    String?   @map("avatar_url")
+  vaultPin     String?   @map("vault_pin")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  projects     Project[]
+  subscriptions Subscription[]
+  credentials  Credential[]
+
+  @@map("users")
+}
+
+// ── Project ────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  icon        String        @default("📁")
+  color       String        @default("#3B82F6")
+  status      ProjectStatus @default(ACTIVE)
+  sortOrder   Int           @default(0) @map("sort_order")
+  userId      String        @map("user_id")
+  user        User          @relation(fields: [userId], references: [id])
+  pages       Page[]
+  tasks       Task[]
+  labels      Label[]
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@map("projects")
+}
+
+// ── Page (Document) ────────────────────────────────────────────
+
+model Page {
+  id        String   @id @default(cuid())
+  title     String   @default("Trang mới")
+  content   Json?
+  icon      String   @default("📄")
+  coverUrl  String?  @map("cover_url")
+  projectId String   @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentId  String?  @map("parent_id")
+  parent    Page?    @relation("PageTree", fields: [parentId], references: [id])
+  children  Page[]   @relation("PageTree")
+  tasks     Task[]
+  sortOrder Int      @default(0) @map("sort_order")
+  isPinned  Boolean  @default(false) @map("is_pinned")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pages")
+}
+
+// ── Task ───────────────────────────────────────────────────────
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?    @map("due_date")
+  projectId   String       @map("project_id")
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pageId      String?      @map("page_id")
+  page        Page?        @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  labels      Label[]
+  sortOrder   Int          @default(0) @map("sort_order")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("tasks")
+}
+
+// ── Label ──────────────────────────────────────────────────────
+
+model Label {
+  id        String  @id @default(cuid())
+  name      String
+  color     String  @default("#6B7280")
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@unique([name, projectId])
+  @@map("labels")
+}
+
+// ── Vault: Subscription & License ──────────────────────────────
+
+model Subscription {
+  id            String    @id @default(cuid())
+  name          String
+  category      String
+  cost          Float
+  currency      String    @default("USD")
+  period        String    @default("monthly")
+  autoRenew     Boolean   @default(true) @map("auto_renew")
+  renewalDate   DateTime? @map("renewal_date")
+  paymentMethod String?   @map("payment_method")
+  status        String    @default("Active")
+  licenseKey    String?   @map("license_key")
+  notes         String?
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+// ── Vault: Credential ──────────────────────────────────────────
+
+model Credential {
+  id        String   @id @default(cuid())
+  name      String
+  category  String
+  url       String?
+  username  String
+  secret    String
+  notes     String?
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("credentials")
+}
