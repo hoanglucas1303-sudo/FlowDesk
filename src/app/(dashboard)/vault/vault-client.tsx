@@ -200,8 +200,8 @@ export default function VaultClient({
     return subscriptions.filter((sub) => sub.status === "Active");
   }, [subscriptions]);
 
-  const costByCurrency = useMemo(() => {
-    const totals: Record<string, number> = {};
+  const totalMonthlyCostVND = useMemo(() => {
+    let totalVND = 0;
     activeSubs.forEach((sub) => {
       let monthlyCost = sub.cost;
       if (sub.period === "weekly") {
@@ -209,9 +209,16 @@ export default function VaultClient({
       } else if (sub.period === "yearly") {
         monthlyCost = sub.cost / 12;
       }
-      totals[sub.currency] = (totals[sub.currency] || 0) + monthlyCost;
+
+      let costInVND = monthlyCost;
+      if (sub.currency === "USD") {
+        costInVND = monthlyCost * 25400; // 1 USD = 25,400 VND
+      } else if (sub.currency === "EUR") {
+        costInVND = monthlyCost * 27500; // 1 EUR = 27,500 VND
+      }
+      totalVND += costInVND;
     });
-    return totals;
+    return totalVND;
   }, [activeSubs]);
 
   const dueSoonCount = useMemo(() => {
@@ -507,19 +514,13 @@ export default function VaultClient({
             <DollarSign size={16} className="text-emerald-500" />
           </div>
           <div className="my-3 flex flex-wrap gap-x-4 gap-y-1 items-baseline">
-            {Object.keys(costByCurrency).length === 0 ? (
-              <span className="text-2xl font-bold text-text-primary">$0.00</span>
-            ) : (
-              Object.entries(costByCurrency).map(([curr, total]) => (
-                <span key={curr} className="text-2xl font-bold text-text-primary">
-                  {curr === "VND"
-                    ? `₫${Math.round(total).toLocaleString("vi-VN")}`
-                    : `${curr === "EUR" ? "€" : "$"}${total.toFixed(2)}`}
-                </span>
-              ))
-            )}
+            <span className="text-2xl font-bold text-text-primary">
+              ₫{Math.round(totalMonthlyCostVND).toLocaleString("vi-VN")}
+            </span>
           </div>
-          <p className="text-xs text-text-muted">Quy đổi tương đương theo chu kỳ đăng ký.</p>
+          <p className="text-xs text-text-muted">
+            Quy đổi tương đương theo chu kỳ đăng ký (1$ ≈ 25.400đ, 1€ ≈ 27.500đ).
+          </p>
         </div>
 
         {/* Total Active */}
