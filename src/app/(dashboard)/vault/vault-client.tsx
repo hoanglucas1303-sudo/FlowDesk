@@ -33,6 +33,85 @@ import {
 } from "lucide-react";
 import type { Subscription, Credential } from "@/types";
 
+const brands: Record<
+  string,
+  { label: string; bg: string; color: string; content: React.ReactNode }
+> = {
+  chatgpt: {
+    label: "ChatGPT",
+    bg: "bg-emerald-500/10 border border-emerald-500/20",
+    color: "text-emerald-500",
+    content: <span className="font-extrabold text-[11px]">GPT</span>,
+  },
+  claude: {
+    label: "Claude AI",
+    bg: "bg-[#d9775f]/15 border border-[#d9775f]/30",
+    color: "text-[#d9775f]",
+    content: <span className="font-extrabold text-[11px]">Cld</span>,
+  },
+  codex: {
+    label: "OpenAI Codex",
+    bg: "bg-[#10a37f]/10 border border-[#10a37f]/20",
+    color: "text-[#10a37f]",
+    content: <span className="font-extrabold text-[10px]">Cdx</span>,
+  },
+  gemini: {
+    label: "Google Gemini",
+    bg: "bg-blue-500/10 border border-blue-500/20",
+    color: "text-blue-500 dark:text-blue-400",
+    content: <span className="font-extrabold text-[11px]">Gem</span>,
+  },
+  antigravity: {
+    label: "Antigravity",
+    bg: "bg-pink-500/10 border border-pink-500/20",
+    color: "text-pink-500",
+    content: <span className="font-extrabold text-[11px]">Ag</span>,
+  },
+  cursor: {
+    label: "Cursor Editor",
+    bg: "bg-neutral-500/10 border border-neutral-500/25",
+    color: "text-text-primary",
+    content: <span className="font-extrabold text-[11px]">Csr</span>,
+  },
+  railway: {
+    label: "Railway.app",
+    bg: "bg-[#f43f5e]/10 border border-[#f43f5e]/20",
+    color: "text-[#f43f5e]",
+    content: <span className="font-extrabold text-[11px]">Rly</span>,
+  },
+  vercel: {
+    label: "Vercel",
+    bg: "bg-neutral-800/10 dark:bg-white/10 border border-border",
+    color: "text-text-primary",
+    content: <span className="text-sm font-bold leading-none">▲</span>,
+  },
+  copilot: {
+    label: "GitHub Copilot",
+    bg: "bg-[#24292f]/10 dark:bg-white/10 border border-border",
+    color: "text-text-primary",
+    content: <span className="font-extrabold text-[11px]">Cop</span>,
+  },
+};
+
+function ServiceIcon({ icon, className }: { icon: string | null; className?: string }) {
+  if (!icon) return <div className={cn("p-2 rounded-lg bg-bg-elevated w-9 h-9 flex items-center justify-center shrink-0 border border-border text-xs", className)}>📁</div>;
+
+  const brand = brands[icon];
+  if (brand) {
+    return (
+      <div className={cn("rounded-lg flex items-center justify-center font-bold select-none shrink-0 w-9 h-9", brand.bg, brand.color, className)}>
+        {brand.content}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("rounded-lg flex items-center justify-center bg-bg-elevated border border-border select-none shrink-0 w-9 h-9 text-lg", className)}>
+      {icon}
+    </div>
+  );
+}
+
 interface VaultClientProps {
   hasPin: boolean;
   initialSubscriptions: Subscription[];
@@ -731,16 +810,19 @@ export default function VaultClient({
                       </span>
                     </div>
 
-                    {/* Middle Row: Title + Cost */}
-                    <div className="mb-4">
-                      <h3 className="text-lg font-bold text-text-primary line-clamp-1">{sub.name}</h3>
-                      <div className="text-xl font-extrabold text-text-primary mt-1 items-baseline flex gap-1">
-                        {sub.currency === "VND"
-                          ? `₫${Math.round(sub.cost).toLocaleString("vi-VN")}`
-                          : `${sub.currency === "EUR" ? "€" : "$"}${sub.cost}`}
-                        <span className="text-xs font-semibold text-text-muted normal-case font-normal">
-                          / {sub.period === "monthly" ? "tháng" : sub.period === "yearly" ? "năm" : "tuần"}
-                        </span>
+                    {/* Middle Row: Icon + Title + Cost */}
+                    <div className="flex gap-3 mb-4 items-start">
+                      <ServiceIcon icon={sub.icon} />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-bold text-text-primary line-clamp-1" title={sub.name}>{sub.name}</h3>
+                        <div className="text-lg font-extrabold text-text-primary mt-0.5 items-baseline flex gap-1">
+                          {sub.currency === "VND"
+                            ? `₫${Math.round(sub.cost).toLocaleString("vi-VN")}`
+                            : `${sub.currency === "EUR" ? "€" : "$"}${sub.cost}`}
+                          <span className="text-xs font-semibold text-text-muted normal-case font-normal">
+                            / {sub.period === "monthly" ? "tháng" : sub.period === "yearly" ? "năm" : "tuần"}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -1107,6 +1189,7 @@ interface SubscriptionModalProps {
 function SubscriptionModal({ sub, onClose, onSave }: SubscriptionModalProps) {
   const [name, setName] = useState(sub?.name || "");
   const [category, setCategory] = useState(sub?.category || "AI Models");
+  const [icon, setIcon] = useState(sub?.icon || "📁");
   const [cost, setCost] = useState(sub?.cost?.toString() || "0");
   const [currency, setCurrency] = useState(sub?.currency || "USD");
   const [period, setPeriod] = useState(sub?.period || "monthly");
@@ -1132,6 +1215,7 @@ function SubscriptionModal({ sub, onClose, onSave }: SubscriptionModalProps) {
       await onSave({
         name,
         category,
+        icon,
         cost: parseFloat(cost) || 0,
         currency,
         period,
@@ -1198,6 +1282,83 @@ function SubscriptionModal({ sub, onClose, onSave }: SubscriptionModalProps) {
                 <option value="Expired">Hết hạn</option>
                 <option value="Cancelled">Đã huỷ</option>
               </select>
+            </div>
+          </div>
+
+          {/* Icon/Logo Picker */}
+          <div className="p-3.5 rounded-[8px] bg-bg-elevated/20 border border-border space-y-3">
+            <label className="text-sm font-medium text-text-primary block">Biểu tượng / Logo đại diện</label>
+            
+            <div className="flex items-center gap-3">
+              <ServiceIcon icon={icon} />
+              <div>
+                <span className="text-[11px] text-text-muted block font-medium uppercase tracking-wider">Đang chọn</span>
+                <span className="text-sm font-bold text-text-primary">
+                  {brands[icon] ? brands[icon].label : `Emoji: ${icon}`}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Các dịch vụ của anh</div>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { key: "chatgpt", label: "ChatGPT" },
+                  { key: "claude", label: "Claude" },
+                  { key: "codex", label: "Codex" },
+                  { key: "gemini", label: "Gemini" },
+                  { key: "antigravity", label: "Antigravity" },
+                  { key: "cursor", label: "Cursor" },
+                  { key: "railway", label: "Railway" },
+                  { key: "vercel", label: "Vercel" },
+                  { key: "copilot", label: "Copilot" }
+                ].map((brand) => (
+                  <button
+                    key={brand.key}
+                    type="button"
+                    onClick={() => setIcon(brand.key)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-[6px] text-xs font-semibold border transition-all cursor-pointer",
+                      icon === brand.key
+                        ? "bg-accent text-white border-accent"
+                        : "bg-bg-elevated text-text-secondary border-border hover:text-text-primary hover:bg-bg-surface"
+                    )}
+                  >
+                    {brand.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted pt-1">Emoji nhanh</div>
+              <div className="flex flex-wrap gap-1">
+                {["📁", "🤖", "💻", "✨", "🛸", "🎯", "🚂", "🐙", "💳", "🌐", "💼", "🔑"].map((emo) => (
+                  <button
+                    key={emo}
+                    type="button"
+                    onClick={() => setIcon(emo)}
+                    className={cn(
+                      "w-7 h-7 flex items-center justify-center rounded-[4px] text-sm border transition-all cursor-pointer",
+                      icon === emo
+                        ? "bg-accent border-accent text-white scale-105"
+                        : "bg-bg-elevated border-border hover:bg-bg-surface"
+                    )}
+                  >
+                    {emo}
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-1 flex gap-2 items-center">
+                <span className="text-xs text-text-muted font-medium shrink-0">Nhập Emoji khác:</span>
+                <input
+                  type="text"
+                  maxLength={10}
+                  value={!brands[icon] ? icon : ""}
+                  onChange={(e) => setIcon(e.target.value || "📁")}
+                  placeholder="Ví dụ: 🚀"
+                  className="h-8 w-24 rounded-[6px] px-2 text-center text-xs bg-bg-elevated text-text-primary border border-border focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+              </div>
             </div>
           </div>
 

@@ -128,6 +128,7 @@ export interface Subscription {
   id: string;
   name: string;
   category: string;
+  icon: string | null;
   cost: number;
   currency: string;
   period: string;

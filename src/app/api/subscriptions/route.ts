@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     const {
       name,
       category,
+      icon,
       cost,
       currency,
       period,
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         category,
+        icon: icon || "📁",
         cost: parseFloat(cost) || 0,
         currency: currency || "USD",
         period: period || "monthly",

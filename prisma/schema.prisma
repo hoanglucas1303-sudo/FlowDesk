@@ -128,6 +128,7 @@ model Subscription {
   id            String    @id @default(cuid())
   name          String
   category      String
+  icon          String?   @default("📁")
   cost          Float
   currency      String    @default("USD")
   period        String    @default("monthly")

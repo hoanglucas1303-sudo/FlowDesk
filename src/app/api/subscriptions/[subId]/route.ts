@@ -27,6 +27,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const {
       name,
       category,
+      icon,
       cost,
       currency,
       period,
@@ -41,6 +42,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name.trim();
     if (category !== undefined) updateData.category = category;
+    if (icon !== undefined) updateData.icon = icon;
     if (cost !== undefined) updateData.cost = parseFloat(cost) || 0;
     if (currency !== undefined) updateData.currency = currency;
     if (period !== undefined) updateData.period = period;
