@@ -112,6 +112,47 @@ function ServiceIcon({ icon, className }: { icon: string | null; className?: str
   );
 }
 
+function getCountdownInfo(renewalDate: string | Date | null) {
+  if (!renewalDate) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const renewal = new Date(renewalDate);
+  renewal.setHours(0, 0, 0, 0);
+
+  const diffTime = renewal.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  let text = "";
+  let colorClass = "";
+  let isBlinking = false;
+
+  if (diffDays < 0) {
+    const absDays = Math.abs(diffDays);
+    text = `Quá hạn ${absDays} ngày`;
+    colorClass = "bg-red-500/10 text-red-500 border border-red-500/20";
+    isBlinking = true;
+  } else if (diffDays === 0) {
+    text = "Đến hạn hôm nay";
+    colorClass = "bg-red-500/10 text-red-500 border border-red-500/20";
+    isBlinking = true;
+  } else if (diffDays <= 5) {
+    text = `Còn ${diffDays} ngày`;
+    colorClass = "bg-red-500/10 text-red-500 border border-red-500/20";
+    isBlinking = true;
+  } else if (diffDays <= 20) {
+    text = `Còn ${diffDays} ngày`;
+    colorClass = "bg-orange-500/10 text-orange-500 border border-orange-500/20";
+    isBlinking = false;
+  } else {
+    text = `Còn ${diffDays} ngày`;
+    colorClass = "bg-green-500/10 text-green-500 border border-green-500/20";
+    isBlinking = false;
+  }
+
+  return { daysLeft: diffDays, text, colorClass, isBlinking };
+}
+
 interface VaultClientProps {
   hasPin: boolean;
   initialSubscriptions: Subscription[];
@@ -557,6 +598,15 @@ export default function VaultClient({
   // --- Render Vault Dashboard ---
   return (
     <div className="max-w-[1600px] mx-auto w-full space-y-6 animate-fade-in pb-12">
+      <style>{`
+        @keyframes pulse-blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        .animate-pulse-blink {
+          animation: pulse-blink 2s infinite ease-in-out;
+        }
+      `}</style>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
         <div>
@@ -780,6 +830,7 @@ export default function VaultClient({
                 renewalDateObj &&
                 isSubActive &&
                 (renewalDateObj.getTime() - new Date().getTime()) / 86400000 <= 7;
+              const countdownInfo = getCountdownInfo(sub.renewalDate);
 
               return (
                 <div
@@ -792,22 +843,35 @@ export default function VaultClient({
                       <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
                         {sub.category}
                       </span>
-                      <span
-                        className={cn(
-                          "px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase tracking-wider",
-                          sub.status === "Active"
-                            ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                            : sub.status === "Expired"
-                            ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                            : "bg-neutral-500/10 text-neutral-500 border border-neutral-500/20"
+                      <div className="flex items-center gap-1.5">
+                        {countdownInfo && (
+                          <span
+                            className={cn(
+                              "px-2 py-0.5 rounded-[4px] text-[10px] font-bold border",
+                              countdownInfo.colorClass,
+                              countdownInfo.isBlinking && "animate-pulse-blink"
+                            )}
+                          >
+                            {countdownInfo.text}
+                          </span>
                         )}
-                      >
-                        {sub.status === "Active"
-                          ? "Hoạt động"
-                          : sub.status === "Expired"
-                          ? "Hết hạn"
-                          : "Đã hủy"}
-                      </span>
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase tracking-wider",
+                            sub.status === "Active"
+                              ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                              : sub.status === "Expired"
+                              ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                              : "bg-neutral-500/10 text-neutral-500 border border-neutral-500/20"
+                          )}
+                        >
+                          {sub.status === "Active"
+                            ? "Hoạt động"
+                            : sub.status === "Expired"
+                            ? "Hết hạn"
+                            : "Đã hủy"}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Middle Row: Icon + Title + Cost */}
