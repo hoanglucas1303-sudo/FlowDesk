@@ -30,6 +30,7 @@ import {
   Mail,
   FileText,
   X,
+  RotateCw,
 } from "lucide-react";
 import type { Subscription, Credential } from "@/types";
 
@@ -90,6 +91,12 @@ const brands: Record<
     bg: "bg-[#24292f]/10 dark:bg-white/10 border border-border",
     color: "text-text-primary",
     content: <span className="font-extrabold text-[11px]">Cop</span>,
+  },
+  openrouter: {
+    label: "OpenRouter",
+    bg: "bg-indigo-500/10 border border-indigo-500/20",
+    color: "text-indigo-500 dark:text-indigo-400",
+    content: <span className="font-extrabold text-[11px]">OR</span>,
   },
 };
 
@@ -194,6 +201,40 @@ export default function VaultClient({
 
   const toast = useToast();
   const [isPending, startTransition] = useTransition();
+
+  const [openRouterBalances, setOpenRouterBalances] = useState<
+    Record<string, { balance: number | null; type: string } | { error: string }>
+  >({});
+
+  const fetchOpenRouterBalance = async (subId: string, apiKey: string) => {
+    try {
+      const res = await fetch("/api/vault/openrouter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Không thể đồng bộ số dư");
+      setOpenRouterBalances((prev) => ({
+        ...prev,
+        [subId]: data,
+      }));
+    } catch (err: any) {
+      setOpenRouterBalances((prev) => ({
+        ...prev,
+        [subId]: { error: err.message || "Lỗi kết nối" },
+      }));
+    }
+  };
+
+  useEffect(() => {
+    if (isLocked) return;
+    subscriptions.forEach((sub) => {
+      if (sub.icon === "openrouter" && sub.licenseKey && !openRouterBalances[sub.id]) {
+        fetchOpenRouterBalance(sub.id, sub.licenseKey);
+      }
+    });
+  }, [subscriptions, openRouterBalances, isLocked]);
 
   // Mount effect
   useEffect(() => {
@@ -890,6 +931,43 @@ export default function VaultClient({
                       </div>
                     </div>
 
+                    {/* OpenRouter Balance Banner */}
+                    {sub.icon === "openrouter" && sub.licenseKey && (
+                      <div className="mb-4 p-2.5 rounded-[8px] bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/10 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-text-secondary">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                          <span className="font-medium text-text-muted">Ví OpenRouter:</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-indigo-500 dark:text-indigo-400">
+                            {(() => {
+                              const info = openRouterBalances[sub.id];
+                              if (!info) return "Đang tải...";
+                              if ("error" in info) return "Lỗi kết nối";
+                              if (info.balance === null) return "Không giới hạn";
+                              return `$${info.balance.toFixed(4)}`;
+                            })()}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (sub.licenseKey) {
+                                setOpenRouterBalances((prev) => {
+                                  const next = { ...prev };
+                                  delete next[sub.id];
+                                  return next;
+                                });
+                              }
+                            }}
+                            className="p-1 rounded hover:bg-bg-elevated text-text-muted hover:text-text-primary transition-all cursor-pointer flex items-center justify-center"
+                            title="Đồng bộ số dư"
+                          >
+                            <RotateCw size={11} className={cn(!openRouterBalances[sub.id] && "animate-spin")} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Metadata */}
                     <div className="space-y-2 text-xs text-text-secondary border-t border-border pt-3">
                       {sub.renewalDate && (
@@ -1375,7 +1453,8 @@ function SubscriptionModal({ sub, onClose, onSave }: SubscriptionModalProps) {
                   { key: "cursor", label: "Cursor" },
                   { key: "railway", label: "Railway" },
                   { key: "vercel", label: "Vercel" },
-                  { key: "copilot", label: "Copilot" }
+                  { key: "copilot", label: "Copilot" },
+                  { key: "openrouter", label: "OpenRouter" }
                 ].map((brand) => (
                   <button
                     key={brand.key}
