@@ -20,6 +20,7 @@ model User {
   projects     Project[]
   subscriptions Subscription[]
   credentials  Credential[]
+  products     Product[]
 
   @@map("users")
 }
@@ -162,4 +163,26 @@ model Credential {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("credentials")
+}
+
+// ── Production: Product ────────────────────────────────────────
+
+model Product {
+  id           String    @id @default(cuid())
+  name         String
+  description  String?
+  status       String    @default("Active") // e.g. Active, Beta, Maintenance, Dev
+  version      String    @default("1.0.0")
+  url          String?
+  repoUrl      String?   @map("repo_url")
+  techStack    String?   @map("tech_stack")
+  docsUrl      String?   @map("docs_url")
+  demoAccounts Json?     @map("demo_accounts")
+  demoDocs     Json?     @map("demo_docs")
+  userId       String    @map("user_id")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("products")
 }

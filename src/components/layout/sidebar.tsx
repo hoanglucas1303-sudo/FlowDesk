@@ -20,6 +20,7 @@ import {
   X,
   LogOut,
   Lock,
+  Layers,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ const navItems = [
   { href: '/documents', label: UI.documents, icon: FileText },
   { href: '/tasks', label: UI.tasks, icon: CheckSquare },
   { href: '/vault', label: UI.vault, icon: Lock },
+  { href: '/production', label: 'Production', icon: Layers },
 ];
 
 // ── Page Tree Item ───────────────────────────────────────────────

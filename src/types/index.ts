@@ -155,3 +155,34 @@ export interface Credential {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface DemoAccount {
+  role?: string;
+  username?: string;
+  password?: string;
+  notes?: string;
+}
+
+export interface DemoDoc {
+  name?: string;
+  url?: string;
+  description?: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  version: string;
+  url: string | null;
+  repoUrl: string | null;
+  techStack: string | null;
+  docsUrl: string | null;
+  demoAccounts: DemoAccount[] | null;
+  demoDocs: DemoDoc[] | null;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
